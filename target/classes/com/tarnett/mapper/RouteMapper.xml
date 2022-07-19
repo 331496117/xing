@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tarnett.mapper.RouteMapper">
+    <!--返回类型-->
+    <resultMap id="routeAndSeller" type="com.tarnett.pojo.Route">
+        <id column="rid" property="rid"/>
+        <id column="rname" property="rname"/>
+        <id column="routeIntroduce" property="routeIntroduce"/>
+        <id column="rflag" property="rflag"/>
+        <id column="rdate" property="rdate"/>
+        <id column="price" property="price"/>
+        <id column="count" property="count"/>
+        <id column="rimage" property="rimage"/>
+        <id column="sid" property="sid"/>
+        <association property="seller" javaType="com.tarnett.pojo.Seller">
+            <id column="sid" property="sid"/>
+            <result column="sname" property="sname"/>
+            <result column="consphone" property="consphone"/>
+            <result column="address" property="address"/>
+        </association>
+    </resultMap>
+
+    <!--根据Cid去查询该分类下面所有的旅游产品-->
+    <select id="selectPageByCid" resultType="com.tarnett.pojo.Route">
+        select t1.* from tab_route t1 left join tab_category_route t2 on t1.rid=t2.rid where 1=1
+        <if test="cid!=null and cid>0">
+            and t2.cid=#{cid}
+        </if>
+        <if test="queryString!=null and queryString.length>0 and queryString!='%null%'">
+            and t1.rname like #{queryString}
+        </if>
+        and t1.isDelete = 1 and t1.rflag = 1
+    </select>
+
+    <select id="selectByCountLimit" parameterType="int" resultType="com.tarnett.pojo.Route">
+        SELECT * FROM tab_route where isDelete = 1 and rflag = 1  ORDER BY COUNT DESC LIMIT #{count}
+    </select>
+
+    <select id="selectRouteAndSellerById" parameterType="int" resultMap="routeAndSeller">
+        SELECT * FROM tab_route t1,tab_seller t2
+        WHERE t1.sid=t2.sid AND t1.rid=#{rid} and isDelete = 1
+    </select>
+
+    <update id="updateCountAndByRid" parameterType="int">
+        update tab_route set count=count+1 where rid=#{rid}
+    </update>
+
+    <update id="updateCountMinusByRid" parameterType="int">
+        update tab_route set count=count-1 where rid=#{rid}
+    </update>
+
+    <select id="selectMyFavoriteRouteImageByUid" parameterType="int" resultType="com.tarnett.pojo.Route">
+        SELECT t1.* FROM tab_route t1,tab_favorite t2 WHERE t1.rid=t2.rid AND t2.uid=#{uid} and t1.isDelete = 1 and t1.rflag = 1  ORDER BY COUNT DESC
+    </select>
+
+    <!--*******************************-->
+
+    <select id="selectByCondition" resultType="com.tarnett.pojo.Route" parameterType="string">
+        select * from tab_route
+        <where>
+            <if test="queryString!=null and queryString.length>0">
+                and rname like concat('%',#{queryString},'%')
+            </if>
+            and isDelete = 1
+        </where>
+    </select>
+
+    <insert id="insertRoute" parameterType="com.tarnett.pojo.Route">
+        insert into tab_route(rname,price,routeIntroduce,rflag,rdate,count,rimage,sid)
+        values(#{rname},#{price},#{routeIntroduce},#{rflag},#{rdate},#{count},#{rimage},#{sid})
+    </insert>
+
+    <update id="updateRoute" parameterType="com.tarnett.pojo.Route" >
+        update tab_route
+        <set>
+            <if test="rname!=null">
+                rname=#{rname},
+            </if>
+            <if test="price!=null">
+                price=#{price},
+            </if>
+            <if test="routeIntroduce!=null">
+                routeIntroduce=#{routeIntroduce},
+            </if>
+            <if test="rflag!=null">
+                rflag=#{rflag},
+            </if>
+            <if test="rdate!=null">
+                rdate=#{rdate},
+            </if>
+            <if test="count!=null">
+                count=#{count},
+            </if>
+            <if test="rimage!=null">
+                rimage=#{rimage},
+            </if>
+            <if test="sid!=null">
+                sid=#{sid}
+            </if>
+        </set>
+        <where>
+            rid=#{rid}
+        </where>
+    </update>
+
+    <update id="updateIsDeleteById">
+        update tab_route set isDelete = 0 where rid = #{rid}
+    </update>
+
+    <update id="updateRflagByAuto">
+        update tab_route set rflag=#{rflag} where rid = #{rid}
+    </update>
+
+</mapper>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- 页面meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>融云旅游</title>
+    <meta name="description" content="融云旅游">
+    <meta name="keywords" content="融云旅游">
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="../js/jquery.min.js"></script>
+    <script src="../js/vue.js"></script>
+    <script src="../plugins/elementui/index.js"></script>
+    <script src="../js/axios-0.18.0.js"></script>
+    <style>
+        .datatable {
+            position: relative;
+            box-sizing: border-box;
+            -webkit-box-flex: 1;
+            width: 100%;
+            max-width: 100%;
+            font-size: 14px;
+            color: rgb(96, 98, 102);
+            overflow: hidden;
+            flex: 1 1 0%;
+        }
+
+        .datatable td, .datatable th {
+            padding: 12px 0;
+            min-width: 0;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+            position: relative;
+            text-align: left;
+        }
+    </style>
+</head>
+<body class="hold-transition">
+<div id="app">
+    <div class="content-header">
+        <h1>分类管理<small>分类列表</small></h1>
+        <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item>分类管理</el-breadcrumb-item>
+            <el-breadcrumb-item>分类列表</el-breadcrumb-item>
+        </el-breadcrumb>
+    </div>
+    <div class="app-container">
+        <div class="box">
+            <div class="filter-container">
+                <el-input placeholder="名称" v-model="pagination.queryString" style="width: 200px;"
+                          class="filter-item" @keyup.enter.native="handleFilter"></el-input>
+                <el-button @click="findPage(1)" class="dalfBut">查询</el-button>
+                <el-button type="primary" class="butT" @click="handleCreate()">新建</el-button>
+            </div>
+            <el-table size="small" current-row-key="id" :data="dataList" stripe highlight-current-row>
+                <el-table-column type="index" align="center" label="序号"></el-table-column>
+                <el-table-column prop="cid" label="分类ID" align="center"></el-table-column>
+                <el-table-column prop="cname" label="名称" align="center"></el-table-column>
+                <el-table-column prop="online" label="上线/下线" align="center">
+                    <template slot-scope="scope">
+                        <el-switch
+                                v-model="scope.row.online"
+                                active-text="上线"
+                                inactive-text="下线"
+                                active-value="1"
+                                inactive-value="0"
+                                @change="changeSwitch($event, scope.row)"
+                        >
+                        </el-switch>
+                    </template>
+                </el-table-column>
+                <el-table-column label="操作" align="center">
+                    <template slot-scope="scope">
+                        <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
+<!--                        <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>-->
+                    </template>
+                </el-table-column>
+            </el-table>
+            <div class="pagination-container">
+                <el-pagination
+                        class="pagiantion"
+                        @current-change="handleCurrentChange"
+                        :current-page.sync="pagination.currentPage"
+                        :page-size="pagination.pageSize"
+                        layout="total, prev, pager, next, jumper"
+                        :total="pagination.total">
+                </el-pagination>
+            </div>
+            <!-- 新增标签弹层 -->
+            <div class="add-form">
+                <!--打开弹出框，默认滚动条在顶部  :lock-sroll="false" :append-to-body="true" -->
+                <el-dialog :lock-sroll="false" :append-to-body="true" title="新增分类" :visible.sync="dialogFormVisible">
+                    <template>
+                        <el-tabs v-model="activeName" type="card">
+                            <el-tab-pane label="基本信息" name="first">
+                                <el-form ref="dataAddForm" :model="formData" :rules="rules" label-position="right" label-width="100px">
+                                    <el-row>
+                                        <el-col :span="12">
+                                            <el-form-item label="名称" prop="cname">
+                                                <el-input v-model="formData.cname"/>
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                </el-form>
+                            </el-tab-pane>
+<!--                            <el-tab-pane label="旅游产品" name="second">-->
+<!--                                <div class="checkScrol">-->
+<!--                                    <table class="datatable">-->
+<!--                                        <thead>-->
+<!--                                        <tr>-->
+<!--                                            <th>选择</th>-->
+<!--                                            <th>产品名称</th>-->
+<!--                                            <th>产品价格</th>-->
+<!--                                            <th>收藏次数</th>-->
+<!--                                        </tr>-->
+<!--                                        </thead>-->
+<!--                                        <tbody>-->
+<!--                                        <tr v-for="c in tableData">-->
+<!--                                            <td>-->
+<!--                                                <input :id="c.rid" v-model="checkRouteIds" type="checkbox" :value="c.rid">-->
+<!--                                            </td>-->
+<!--                                            <td><label :for="c.id">{{c.rname}}</label></td>-->
+<!--                                            <td><label :for="c.id">{{c.price}}</label></td>-->
+<!--                                            <td><label :for="c.id">{{c.count}}</label></td>-->
+<!--                                        </tr>-->
+<!--                                        </tbody>-->
+<!--                                    </table>-->
+<!--                                </div>-->
+<!--                            </el-tab-pane>-->
+                        </el-tabs>
+                    </template>
+                    <div slot="footer" class="dialog-footer">
+                        <el-button @click="dialogFormVisible = false">取消</el-button>
+                        <el-button type="primary" @click="handleAdd()">确定</el-button>
+                    </div>
+                </el-dialog>
+            </div>
+
+            <!-- 编辑标签弹层 -->
+            <div class="add-form">
+                <el-dialog :lock-sroll="false" :append-to-body="true"  title="编辑分类" :visible.sync="dialogFormVisible4Edit">
+                    <template>
+                        <el-tabs v-model="activeName" type="card">
+                            <el-tab-pane label="基本信息" name="first">
+                                <el-form ref="dataEditForm" :model="formData" :rules="rules" label-position="right" label-width="100px">
+                                    <el-row>
+                                        <el-col :span="12">
+                                            <el-form-item label="名称" prop="cname">
+                                                <el-input v-model="formData.cname"/>
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                </el-form>
+                            </el-tab-pane>
+                            <el-tab-pane label="旅游产品" name="second">
+                                <div class="checkScrol">
+                                    <table class="datatable" ref="table">
+                                        <thead>
+                                        <tr>
+                                            <th>选择</th>
+                                            <th>产品名称</th>
+                                            <th>产品价格</th>
+                                            <th>收藏次数</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr v-for="c in tableData">
+                                            <td>
+                                                <input :id="c.rid" v-model="checkRouteIds" type="checkbox" :value="c.rid">
+                                            </td>
+                                            <td><label :for="c.rid">{{c.rname}}</label></td>
+                                            <td><label :for="c.rid">{{c.price}}</label></td>
+                                            <td><label :for="c.rid">{{c.count}}</label></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </el-tab-pane>
+                        </el-tabs>
+                    </template>
+                    <div slot="footer" class="dialog-footer">
+                        <el-button @click="dialogFormVisible4Edit = false">取消</el-button>
+                        <el-button type="primary" @click="handleEdit()">确定</el-button>
+                    </div>
+                </el-dialog>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+<script>
+    const vue = new Vue({
+        el: '#app',
+        data: {
+            activeName: 'first',//添加/编辑窗口Tab标签名称
+            pagination: {//分页相关属性
+                currentPage: 1,
+                pageSize: 10,
+                total: 100,
+                queryString: null,
+            },
+            dataList: [],//列表数据
+            formData: {},//表单数据
+            tableData: [],//新增和编辑表单中对应的检查项列表数据
+            checkRouteIds: [],//新增和编辑表单中旅游产品对应的复选框，基于双向绑定可以进行回显和数据提交
+            dialogFormVisible: false,//控制添加窗口显示/隐藏
+            dialogFormVisible4Edit: false,//控制编辑窗口显示/隐藏
+            rules: {
+                cname: [{required: true, message: "分类名称为必填项", trigger: "blur"}]
+            }
+        },
+        created() {
+            // 页面加载完，需要分页查询检查组的数据
+            this.findPage();
+        },
+        methods: {
+            //编辑
+            handleEdit() {
+                this.$refs["dataEditForm"].validate((valid)=>{
+                    if(valid){
+                        axios.post("/category/modify.do",this.formData).then((res)=>{
+                            if(res.data.flag){
+                                // 显示提示信息
+                                this.$message({
+                                    type:"success",
+                                    message:res.data.message
+                                });
+                                // 关闭编辑标签
+                                this.dialogFormVisible4Edit=false;
+                                // 重新分页查询
+                                this.findPage();
+                            }
+                            else
+                            {
+                                this.$message.error(res.data.message);
+                            }
+                        });
+                    }
+                });
+            },
+            //添加
+            handleAdd() {
+                this.$refs["dataAddForm"].validate((valid)=>{
+                    if(valid)
+                    {
+                        axios.post("/category/addCategory.do",this.formData).then((res)=>{
+                            if(res.data.flag){
+                                this.$message({
+                                    type:"success",
+                                    message: res.data.message
+                                });
+                                // 关闭新增页面
+                                this.dialogFormVisible=false;
+                                // 重新分页请求
+                                this.findPage();
+                            }else {
+                                this.$message.error(res.data.message);
+                            }
+                        })
+                    }
+                });
+            },
+            //分页查询
+            findPage(page) {
+                if(page==1)
+                {
+                    this.pagination.currentPage=1;
+                }
+                // 构建分页参数
+                var queryPageBean = {
+                    currentPage:this.pagination.currentPage,
+                    pageSize: this.pagination.pageSize,
+                    queryString: this.pagination.queryString
+                }
+                // 发送 axios请求
+                axios.post("/category/queryPageManage.do",queryPageBean).then((res)=>{
+                    this.pagination.total = res.data.totalCount;
+                    this.dataList = res.data.dataList;
+                });
+            },
+            // 重置表单
+            resetForm(typeStr) {
+                // 重置提示信息
+                if("add" == typeStr){
+                    if(this.$refs["dataAddForm"] != undefined){
+                        this.$refs["dataAddForm"].clearValidate();
+                    }
+                }
+                if("edit" == typeStr){
+                    if(this.$refs["dataEditForm"] != undefined){
+                        this.$refs["dataEditForm"].clearValidate();
+                    }
+                }
+                // 重置表单数据
+                this.formData = {};
+            },
+            // 弹出添加窗口
+            handleCreate() {
+                //重置表单
+                this.resetForm("add");
+                // 显示新增窗口
+                this.dialogFormVisible = true;
+
+            },
+            // 弹出编辑窗口
+            handleUpdate(row) {
+                this.resetForm("edit");
+                // 查询选择的产品
+                axios.get("/category/queryOne.do?cid="+row.cid).then((res)=>{
+                    if(res.data.flag){
+                       // 显示编辑窗口
+                        this.dialogFormVisible4Edit=true;
+                        this.formData=res.data.data;
+                    }
+                    else
+                    {
+                        this.$message.error(this.data.message);
+                    }
+                });
+
+                // 查询此分类的旅游产品
+                axios.get("/category/queryRoute.do?cid="+row.cid).then((res)=>{
+                    if(res.data.flag){
+                        // 显示编辑窗口
+                        this.dialogFormVisible4Edit=true;
+                        this.tableData=res.data.data;
+                    }
+                    else
+                    {
+                        this.$message.error(this.data.message);
+                    }
+                });
+
+
+            },
+            //切换页码
+            handleCurrentChange(currentPage) {
+                // 设置当前页码
+                this.pagination.currentPage=currentPage;
+                // 调用分页查询
+                this.findPage();
+            },
+            // 删除
+            handleDelete(row) {
+            },
+            changeSwitch(data, row){
+
+                axios.get("/category/updateOnline.do?cid="+row.cid).then((res)=>{
+                    if(res.data.flag){
+                        // 提示信息
+                        this.$message({
+                            type:"success",
+                            message:res.data.message
+                        });
+                    }
+                    else
+                    {
+                        this.$message.error(res.data.message);
+                    }
+                });
+            }
+        }
+    });
+</script>
+</html>

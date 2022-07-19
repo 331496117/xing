@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.tarnett.mapper.UserMapper">
+
+    <insert id="insert" parameterType="com.tarnett.pojo.User">
+        insert into tab_user(username, password, name, birthday, sex, telephone, email, status, code)
+        values(#{username},#{password},#{name},#{birthday},#{sex},#{telephone},#{email},#{status},#{code})
+    </insert>
+
+    <select id="selectByUsername" parameterType="string" resultType="com.tarnett.pojo.User">
+        select * from tab_user where username = #{username}
+    </select>
+
+    <select id="selectByCode" parameterType="string" resultType="com.tarnett.pojo.User">
+        select * from tab_user where code = #{code}
+    </select>
+
+    <update id="updateStatus" parameterType="com.tarnett.pojo.User">
+        update tab_user set status="Y" where uid=#{uid}
+    </update>
+
+    <select id="selectByUsernameAndPassword" parameterType="com.tarnett.pojo.User" resultType="com.tarnett.pojo.User">
+        select * from tab_user where username=#{username} and password=#{password}
+    </select>
+
+    <select id="selectByCondition" resultType="com.tarnett.pojo.User">
+        select * from tab_user
+        <where>
+            <if test="queryString!=null and queryString.length>0">
+                and username like concat('%',#{queryString},'%')
+                 or name like concat('%',#{queryString},'%')
+                 or telephone like concat('%',#{queryString},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="selectUserById" resultType="com.tarnett.pojo.User">
+        select * from tab_user where uid=#{uid}
+    </select>
+
+    <update id="updateUser">
+        update tab_user
+        <set>
+            <if test="username!=null">
+                username=#{username},
+            </if>
+            <if test="password!=null">
+                password=#{password},
+            </if>
+            <if test="name!=null">
+                name=#{name},
+            </if>
+            <if test="birthday!=null">
+                birthday=#{birthday},
+            </if>
+            <if test="sex!=null">
+                sex=#{sex},
+            </if>
+            <if test="telephone!=null">
+                telephone=#{telephone},
+            </if>
+            <if test="email!=null">
+                email=#{email},
+            </if>
+            <if test="status!=null">
+                status=#{status},
+            </if>
+            <if test="code!=null">
+                code=#{code},
+            </if>
+        </set>
+        <where>
+            uid=#{uid}
+        </where>
+    </update>
+
+    <delete id="delete">
+        delete from tab_user where uid=#{uid}
+    </delete>
+
+    <update id="updateStatusByAuto">
+        update tab_user set status=#{status} where uid=#{uid}
+    </update>
+
+</mapper>

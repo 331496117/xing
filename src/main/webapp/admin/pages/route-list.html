@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- 页面meta -->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>融云旅游</title>
+        <meta name="description" content="融云旅游">
+        <meta name="keywords" content="融云旅游">
+        <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+        <!-- 引入样式 -->
+        <link rel="stylesheet" href="../plugins/elementui/index.css">
+        <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+        <link rel="stylesheet" href="../css/style.css">
+        <!-- 引入组件库 -->
+        <script type="text/javascript" src="../js/jquery.min.js"></script>
+        <script src="../js/vue.js"></script>
+        <script src="../plugins/elementui/index.js"></script>
+        <script src="../js/axios-0.18.0.js"></script>
+        <style>
+            .avatar-uploader .el-upload {
+                border: 1px dashed #d9d9d9;
+                border-radius: 6px;
+                cursor: pointer;
+                position: relative;
+                overflow: hidden;
+            }
+            .avatar-uploader .el-upload:hover {
+                border-color: #409EFF;
+            }
+            .avatar-uploader-icon {
+                font-size: 28px;
+                color: #8c939d;
+                width: 178px;
+                height: 178px;
+                line-height: 178px;
+                text-align: center;
+            }
+            .avatar {
+                width: 178px;
+                height: 178px;
+                display: block;
+            }
+            .datatable {
+                position: relative;
+                box-sizing: border-box;
+                -webkit-box-flex: 1;
+                width: 100%;
+                max-width: 100%;
+                font-size: 14px;
+                color: rgb(96, 98, 102);
+                overflow: hidden;
+                flex: 1 1 0%;
+            }
+            .datatable td, .datatable th {
+                padding: 12px 0;
+                min-width: 0;
+                -webkit-box-sizing: border-box;
+                box-sizing: border-box;
+                text-overflow: ellipsis;
+                vertical-align: middle;
+                position: relative;
+                text-align: left;
+            }
+        </style>
+    </head>
+    <body class="hold-transition">
+        <div id="app">
+            <div class="content-header">
+                <h1>产品管理<small>产品列表</small></h1>
+                <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+                    <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+                    <el-breadcrumb-item>产品管理</el-breadcrumb-item>
+                    <el-breadcrumb-item>产品列表</el-breadcrumb-item>
+                </el-breadcrumb>
+            </div>
+            <div class="app-container">
+                <div class="box">
+                    <div class="filter-container">
+                        <el-input placeholder="名称" v-model="pagination.queryString" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter"></el-input>
+                        <el-button @click="findPage()" class="dalfBut">查询</el-button>
+                        <el-button type="primary" class="butT" @click="handleCreate()">新建</el-button>
+                    </div>
+                    <el-table size="small" current-row-key="id" :data="dataList" stripe highlight-current-row>
+                        <el-table-column type="index" align="center" label="序号"></el-table-column>
+                        <el-table-column prop="rname" label="名称" align="center"></el-table-column>
+                        <el-table-column prop="price" label="价格" align="center"></el-table-column>
+                        <el-table-column prop="rdate" label="上架时间" align="center"></el-table-column>
+                        <el-table-column prop="count" label="被收藏数量" align="center"></el-table-column>
+                        <el-table-column prop="rflag" label="上架/下架" align="center">
+                        	<template slot-scope="scope">
+                        		<el-switch
+                        			v-model="scope.row.rflag"
+  									active-text="上架"
+  									inactive-text="下架"
+  									active-value="1"
+  									inactive-value="0"
+  									@change="changeSwitch($event, scope.row)"
+                        		>
+								</el-switch>
+                        	</template>
+                        </el-table-column>
+                        <el-table-column label="操作" align="center">
+                            <template slot-scope="scope">
+                                <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
+                                <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    <div class="pagination-container">
+                        <el-pagination
+                            class="pagiantion"
+                            @current-change="handleCurrentChange"
+                            :current-page="pagination.currentPage"
+                            :page-size="pagination.pageSize"
+                            layout="total, prev, pager, next, jumper"
+                            :total="pagination.total">
+                        </el-pagination>
+                    </div>
+                    <!-- 新增标签弹层 -->
+                    <div class="add-form">
+                        <el-dialog title="新增产品" :visible.sync="dialogFormVisible">
+                        	<el-form :model="formData" ref="dataAddForm" :rules="rules" label-position="right" label-width="100px">
+                            	<el-row>
+                                	<el-col :span="12">
+                                    	<el-form-item label="名称" prop="rname">
+                                        	<el-input v-model="formData.rname"/>
+                                       	</el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                       	<el-form-item label="价格">
+                                        	<el-input v-model="formData.price"/>
+                                        </el-form-item>
+                                	</el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="12">
+                                       	<el-form-item label="是否上架">
+                                        	<el-select v-model="formData.rflag">
+                                            	<el-option label="是" value="1"></el-option>
+                                                <el-option label="否" value="0"></el-option>
+                                            </el-select>
+                                       	</el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                    	<el-form-item label="收藏数量">
+                                        	<el-input v-model="formData.count"/>
+                                        </el-form-item>
+                                    </el-col>
+                             	</el-row>
+                             	<el-row>
+                                	<el-col :span="12">
+                                    	<el-form-item label="选择商家">
+	                                   		<el-select v-model="formData.sid" >
+		                                       	<el-option v-for="s in sellerData" :label="s.sname" :value="s.sid"></el-option>
+		                                    </el-select>
+                                    	</el-form-item>
+                                	</el-col>
+                               	</el-row>
+                                <el-row>
+                                	<el-col :span="24">
+                                    	<el-form-item label="上传图片">
+	                                        <!--
+	                                        action="/setmeal/upload.do" : 上传图片的请求地址
+	                                        :auto-upload="autoUpload" : 自动上传，当选择图片之后就会上传图片
+	                                        name="imgFile" ： 上传图片的名称，后台通过该名称获取上传的文件
+	                                        :on-success="handleAvatarSuccess" ： 图片上传成功后的回调函数
+	                                        :before-upload="beforeAvatarUpload" ： 图片上传之前执行的函数（一般检查图片的大小，类型等）
+	                                        -->
+	                                        <el-upload
+	                                                class="avatar-uploader"
+	                                                action="/route/upload.do"
+	                                                :auto-upload="autoUpload"
+	                                                name="imgFile"
+	                                                :show-file-list="false"
+	                                                :on-success="handleAvatarSuccess"
+	                                                :before-upload="beforeAvatarUpload">
+	                                            <img v-if="imageUrl" :src="imageUrl" class="avatar">
+	                                            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+	                                        </el-upload>
+                                     	</el-form-item>
+                                     </el-col>
+                               	</el-row>
+                               	<el-row>
+                                	<el-col :span="12">
+                                    	<el-form-item label="新增日期">
+                                    		<el-date-picker
+													v-model="formData.rdate"
+													type="date"
+													placeholder="选择日期"
+													value-format="yyyy-MM-dd">
+											</el-date-picker>
+                                    	</el-form-item>
+                                	</el-col>
+                               	</el-row>
+                                <el-row>
+                                	<el-col :span="24">
+                                    	<el-form-item label="产品介绍">
+                                        	<el-input v-model="formData.routeIntroduce" type="textarea"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                              	</el-row>
+                            </el-form>
+                            <div slot="footer" class="dialog-footer">
+                                <el-button @click="dialogFormVisible = false">取消</el-button>
+                                <el-button type="primary" @click="handleAdd()">确定</el-button>
+                            </div>
+                  		</el-dialog>
+                    </div>
+
+
+                    <!-- 编辑标签弹层 -->
+                    <div class="add-form">
+                        <el-dialog title="编辑产品" :visible.sync="dialogFormVisible4Edit">
+                        	<el-form :model="formData" ref="dataEditForm" :rules="rules" label-position="right" label-width="100px">
+                            	<el-row>
+                                	<el-col :span="12">
+                                    	<el-form-item label="名称" prop="rname">
+                                        	<el-input v-model="formData.rname"/>
+                                       	</el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                       	<el-form-item label="价格">
+                                        	<el-input v-model="formData.price"/>
+                                        </el-form-item>
+                                	</el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="12">
+                                       	<el-form-item label="是否上架">
+                                        	<el-select v-model="formData.rflag">
+                                            	<el-option label="是" value="1"></el-option>
+                                                <el-option label="否" value="0"></el-option>
+                                            </el-select>
+                                       	</el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                    	<el-form-item label="收藏数量">
+                                        	<el-input v-model="formData.count"/>
+                                        </el-form-item>
+                                    </el-col>
+                             	</el-row>
+                                <el-row>
+                                	<el-col :span="12">
+                                    	<el-form-item label="选择商家">
+	                                   		<el-select v-model="formData.sid" >
+		                                       	<el-option v-for="s in sellerData" :label="s.sname" :value="s.sid"></el-option>
+		                                    </el-select>
+                                    	</el-form-item>
+                                	</el-col>
+                               	</el-row>
+                                <el-row>
+                                	<el-col :span="24">
+                                    	<el-form-item label="上传图片">
+	                                        <!--
+	                                        action="/setmeal/upload.do" : 上传图片的请求地址
+	                                        :auto-upload="autoUpload" : 自动上传，当选择图片之后就会上传图片
+	                                        name="imgFile" ： 上传图片的名称，后台通过该名称获取上传的文件
+	                                        :on-success="handleAvatarSuccess" ： 图片上传成功后的回调函数
+	                                        :before-upload="beforeAvatarUpload" ： 图片上传之前执行的函数（一般检查图片的大小，类型等）
+	                                        -->
+	                                        <el-upload
+	                                                class="avatar-uploader"
+	                                                action="/route/upload.do"
+	                                                :auto-upload="autoUpload"
+	                                                name="imgFile"
+	                                                :show-file-list="false"
+	                                                :on-success="handleAvatarSuccess"
+	                                                :before-upload="beforeAvatarUpload">
+	                                            <img v-if="imageUrl" :src="imageUrl" class="avatar">
+	                                            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+	                                        </el-upload>
+                                     	</el-form-item>
+                                     </el-col>
+                               	</el-row>
+                               	<el-row>
+                                	<el-col :span="12">
+                                    	<el-form-item label="新增日期">
+											<el-date-picker
+													v-model="formData.rdate"
+													type="date"
+													placeholder="选择日期"
+													value-format="yyyy-MM-dd">
+											</el-date-picker>
+                                    	</el-form-item>
+                                	</el-col>
+                               	</el-row>
+                                <el-row>
+                                	<el-col :span="24">
+                                    	<el-form-item label="产品介绍">
+                                        	<el-input v-model="formData.routeIntroduce" type="textarea"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                              	</el-row>
+                            </el-form>
+                            <div slot="footer" class="dialog-footer">
+                                <el-button @click="dialogFormVisible4Edit = false">取消</el-button>
+                                <el-button type="primary" @click="handleEdit()">确定</el-button>
+                            </div>
+                  		</el-dialog>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+
+    <script>
+        var vue = new Vue({
+            el: '#app',
+            data:{
+                autoUpload:true,//自动上传
+                imageUrl:null,//模型数据，用于上传图片完成后图片预览
+                pagination: {//分页相关属性
+                    currentPage: 1,
+                    pageSize:10,
+                    total:100,
+                    queryString:null,
+                },
+                dataList: [],//列表数据
+                formData: {},//表单数据
+                sellerData:[],//所有的商家信息
+                dialogFormVisible: false,//控制添加窗口显示/隐藏
+                dialogFormVisible4Edit: false,//控制编辑窗口显示/隐藏
+                rules: {
+                    rname: [{required: true, message: "产品名称为必填项", trigger: "blur"}]
+                }
+            },
+            created() {
+            	this.findPage();
+            },
+            methods: {
+                //文件上传成功后的钩子，response为服务端返回的值，file为当前上传的文件封装成的js对象
+                handleAvatarSuccess(response, file) {
+                	// 图片上传成功
+					if(response.flag){
+						// 提示信息
+						this.$message({
+							message:response.message,
+							type:"success"
+						});
+						// 回显照片
+						this.imageUrl = "http://re4l45owe.hn-bkt.clouddn.com/"+response.data;  // data 为是文件名
+						// 设置表单数据项 rimage 的值
+						this.formData.rimage = response.data;
+					}else {
+						// 图片上传失败
+						this.$message.error(response.message)
+					}
+                },
+                //上传图片之前执行
+                beforeAvatarUpload(file) {
+				  const isJPG = file.type === 'image/jpeg' || file.type === 'image/png';
+				  const isLt2M = file.size / 1024 / 1024 < 2;
+				  if (!isJPG) {
+					this.$message.error('上传套餐图片只能是 JPG 格式!');
+				  }
+				  if (!isLt2M) {
+					this.$message.error('上传套餐图片大小不能超过 2MB!');
+				  }
+				  return isJPG && isLt2M;
+                },
+                // 弹出编辑窗口
+                handleUpdate(row){
+                	this.resetForm("edit");
+					// 查询选择的产品
+					axios.get("/route/queryOne.do?rid="+row.rid).then((res)=>{
+						if(res.data.flag){
+							// 回显照片
+							this.imageUrl = "http://re4l45owe.hn-bkt.clouddn.com/"+res.data.data.rimage;  // res.data.data.rimage 为是文件名
+							// 显示编辑窗口
+							this.dialogFormVisible4Edit=true;
+							this.formData=res.data.data;
+						}
+						else
+						{
+							this.$message.error(this.data.message);
+						}
+					});
+					// 查询所有商家信息
+					axios.get("/seller/queryAll.do").then((res)=>{
+						if(res.data.flag){
+							this.sellerData=res.data.data
+						}else {
+							this.$message.error(res.data.message)
+						}
+					});
+                },
+                // 编辑套餐
+                handleEdit(){
+					this.$refs["dataEditForm"].validate((valid)=>{
+						if(valid){
+							axios.post("/route/modify.do",this.formData).then((res)=>{
+								if(res.data.flag){
+									// 显示提示信息
+									this.$message({
+										type:"success",
+										message:res.data.message
+									});
+									// 关闭编辑标签
+									this.dialogFormVisible4Edit=false;
+									// 重新分页查询
+									this.findPage();
+								}
+								else
+								{
+									this.$message.error(res.data.message);
+								}
+							});
+						}
+					});
+                },
+                // 删除
+                handleDelete(row){
+                	// 弹出确认框
+					this.$confirm("提示","你是否删除选择的数据?",{
+						type:"warning"
+					}).then(()=>{
+						// 确认删除
+						axios.get("/route/remove.do?rid="+row.rid).then((res)=>{
+							if(res.data.flag){
+								// 提示信息
+								this.$message({
+									type:"success",
+									message:res.data.message
+								});
+								// 重新分页查询数据
+								// 当删除的是最后一页的最后一条数据的时候，删除数据后，当前页没有数据。如：22页只有一条数据，删除之后，查询的还是22页数据
+								var oldTotalPage = this.pagination.total%this.pagination.pageSize == 0
+										? Math.floor(this.pagination.total/this.pagination.pageSize)
+										: Math.floor(this.pagination.total/this.pagination.pageSize) + 1;
+
+								var newTotalPage = (this.pagination.total-1)%this.pagination.pageSize == 0
+										? (this.pagination.total-1)/this.pagination.pageSize
+										: Math.floor((this.pagination.total-1)/this.pagination.pageSize) + 1;
+
+								// 如果新的总页数小于旧的总页数，并且当前页是最后一页，则当前页设置为新的总页数
+								if(newTotalPage < oldTotalPage && this.pagination.currentPage == oldTotalPage){
+									this.pagination.currentPage = newTotalPage;
+								}
+								this.findPage();
+							}
+							else
+							{
+								this.$message.error(res.data.message);
+							}
+						});
+					}).catch(()=>{
+						this.$message({
+							type: "warning",
+							message: "取消删除操作!"
+						});
+					});
+                },
+                //添加
+                handleAdd () {
+                	this.$refs["dataAddForm"].validate((valid)=>{
+                		if(valid)
+						{
+							axios.post("/route/addRoute.do",this.formData).then((res)=>{
+								if(res.data.flag){
+									this.$message({
+										type:"success",
+										message: res.data.message
+									});
+									// 关闭新增页面
+									this.dialogFormVisible=false;
+									// 重新分页请求
+									this.findPage();
+								}else {
+									this.$message.error(res.data.message);
+								}
+							})
+						}
+					});
+                },
+                //分页查询
+                findPage(page) {
+                	if(page==1)
+					{
+						this.pagination.currentPage=1;
+					}
+                	// 构建分页参数
+					var queryPageBean = {
+                		currentPage:this.pagination.currentPage,
+						pageSize: this.pagination.pageSize,
+						queryString: this.pagination.queryString
+					}
+                	// 发送 axios请求
+					axios.post("/route/queryPageManage.do",queryPageBean).then((res)=>{
+						this.pagination.total = res.data.totalCount;
+						this.dataList = res.data.dataList;
+					});
+                },
+                // 重置表单
+                resetForm(typeStr) {
+                	// 重置提示信息
+					if("add" == typeStr){
+						if(this.$refs["dataAddForm"] != undefined){
+							this.$refs["dataAddForm"].clearValidate();
+						}
+					}
+					if("edit" == typeStr){
+						if(this.$refs["dataEditForm"] != undefined){
+							this.$refs["dataEditForm"].clearValidate();
+						}
+					}
+					// 重置表单数据
+					this.formData = {};
+					// 重置所有商家信息
+					this.sellerData = [];
+					this.imageUrl=null;
+                },
+                // 弹出添加窗口
+                handleCreate() {
+                	//重置表单
+					this.resetForm("add");
+                	// 显示新增窗口
+                	this.dialogFormVisible = true;
+                	// 查询所有商家信息
+					axios.get("/seller/queryAll.do").then((res)=>{
+						if(res.data.flag){
+							this.sellerData=res.data.data
+							console.log(this.sellerData)
+						}else {
+							console.log(res.data.message)
+							this.$message.error(res.data.message)
+						}
+					});
+                },
+                //切换页码
+                handleCurrentChange(currentPage) {
+                	// 设置当前页码
+					this.pagination.currentPage=currentPage;
+					// 调用分页查询
+					this.findPage();
+                },
+				changeSwitch(data, row){
+
+					axios.get("/route/updateFlag.do?rid="+row.rid).then((res)=>{
+						if(res.data.flag){
+							// 提示信息
+							this.$message({
+								type:"success",
+								message:res.data.message
+							});
+						}
+						else
+						{
+							this.$message.error(res.data.message);
+						}
+					});
+				}
+            }
+        })
+    </script>
+</html>

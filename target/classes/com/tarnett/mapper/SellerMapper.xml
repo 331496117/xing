@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tarnett.mapper.SellerMapper">
+
+    <select id="queryAllSeller" resultType="com.tarnett.pojo.Seller">
+        select * from tab_seller;
+    </select>
+
+    <select id="selectByCondition" resultType="com.tarnett.pojo.Seller">
+        select * from tab_seller
+        <where>
+            <if test="queryString!=null and queryString.length>0">
+                and sname like concat('%',#{queryString},'%')
+                or consphone like concat('%',#{queryString},'%')
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertSeller" parameterType="com.tarnett.pojo.Seller">
+        insert into tab_seller(sname,consphone,address)
+        values(#{sname},#{consphone},#{address})
+    </insert>
+
+    <select id="selectSellerById" resultType="com.tarnett.pojo.Seller">
+        select * from tab_seller where sid=#{sid}
+    </select>
+
+    <update id="updateSeller" parameterType="com.tarnett.pojo.Seller">
+        update tab_seller
+        <set>
+            <if test="sname!=null">
+                sname=#{sname},
+            </if>
+            <if test="consphone!=null">
+                consphone=#{consphone},
+            </if>
+            <if test="address!=null">
+                address=#{address},
+            </if>
+        </set>
+        <where>
+            sid=#{sid}
+        </where>
+    </update>
+
+    <delete id="deleteSeller">
+        delete from tab_seller where sid=#{sid}
+    </delete>
+
+
+</mapper>

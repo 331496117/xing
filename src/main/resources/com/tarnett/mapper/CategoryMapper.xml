@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tarnett.mapper.CategoryMapper">
+
+    <select id="selectAll" resultType="com.tarnett.pojo.Category">
+        select * from tab_category where online = '1';
+    </select>
+
+    <select id="selectByCondition" resultType="com.tarnett.pojo.Category">
+        select * from tab_category
+        <where>
+            <if test="queryString!=null and queryString.length>0">
+                and cname like concat('%',#{queryString},'%')
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertCategory">
+        insert into tab_category(cname)
+        values(#{cname})
+    </insert>
+
+    <select id="selectCategoryById" resultType="com.tarnett.pojo.Category">
+        select * from tab_category where cid=#{cid}
+    </select>
+
+    <update id="updateCategory">
+        update tab_category
+        <set>
+            <if test="cname!=null">
+                cname=#{cname}
+            </if>
+        </set>
+        <where>
+            cid=#{cid}
+        </where>
+    </update>
+
+
+    <delete id="deleteCategory">
+        delete from tab_category where cid=#{cid}
+    </delete>
+
+    <select id="selectRouteByCid" resultType="com.tarnett.pojo.Route">
+        select r1.*
+        from tab_category c1,tab_category_route cr1,tab_route r1
+        where c1.cid=#{cid} and c1.cid=cr1.cid and cr1.rid=r1.rid
+    </select>
+
+    <update id="updateOnline">
+        update tab_category set online=#{online} where cid = #{cid}
+    </update>
+</mapper>

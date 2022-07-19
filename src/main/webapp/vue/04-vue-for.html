@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script type="text/javascript" src="js/vue.js"></script>
+<script type="text/javascript" src="js/axios-0.18.0.js"></script>
+</head>
+<body>
+	<div id="app">
+		<ul>
+			<li v-for="user in users">{{user.id}} --- {{user.username}} --- {{user.age}}</li>
+		</ul>
+	</div>
+	<script type="text/javascript">
+		var app = new Vue({
+			el : "#app",
+			data : {
+				users : [
+					{id: 1, username: "zhangsan", age: 21},
+					{id: 2, username: "li", age: 22},
+					{id: 3, username: "wangwu", age: 23},
+					{id: 4, username: "zhaoliu", age: 24}
+				]
+			}
+		});
+	</script>
+</body>
+</html>

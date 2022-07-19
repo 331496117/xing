@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script type="text/javascript" src="js/vue.js"></script>
+</head>
+<body>
+	<div id="app">
+		<input type="text" v-model="username" />
+		<span>{{username}}</span>
+	</div>
+	<script type="text/javascript">
+		var app = new Vue({ // 创建一个vue实例，vue实例里面需要初始化一些参数
+			el : "#app",// el element 元素的意思。该vue实例要渲染页面中的元素，这里渲染的是一个div
+			data : {// 数据是一个对象，里面可以有很多属性，可以绑定很多数据
+				username : ""
+			}
+		});
+	</script>
+</body>
+</html>

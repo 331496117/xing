@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>融云旅游网-登录</title> 
+	<link rel="shortcut icon" href="#"/>
+    <link rel="stylesheet" type="text/css" href="css/common.css">
+    <link rel="stylesheet" type="text/css" href="css/login.css">
+	<!--导入jquery-->
+	<script src="js/jquery-3.3.1.js"></script>
+</head>
+
+<body>
+<!--引入头部-->
+<div id="header"></div>
+    <!-- 头部 end -->
+    <section id="login_wrap">
+        <div class="fullscreen-bg" style="background: url(images/login_bg.png);height: 532px;">s
+        </div>
+        <div class="login-box">
+        	<div class="title">
+        		<span>欢迎登录融云旅游账户</span>
+        	</div>
+        	<div class="login_inner">
+				
+				<!--登录错误提示消息-->
+        		<div id="errorMsg" class="alert alert-danger" ></div>
+				<form id="loginForm" action="" method="post" accept-charset="utf-8">
+					<input id="username" name="username" type="text" placeholder="请输入账号" autocomplete="off">
+        			<input id="password" name="password" type="password" placeholder="请输入密码" autocomplete="off">
+        			<div id="verify"  class="verify">
+					<input id="check" name="check" type="text" placeholder="请输入验证码" autocomplete="off">
+					<span><img id="img" src="/code/checkCode.do" alt="" onclick="changeCheckCode(this)"></span>
+					<script type="text/javascript">
+						//图片点击事件
+						function changeCheckCode(img) {
+							img.src="/code/checkCode.do?"+new Date().getTime();
+						}
+					</script>
+			</div>
+			<div class="submit_btn">
+        				<button type="submit">登录</button>
+        				<div class="auto_login">
+        					<input type="checkbox" name="" class="checkbox">
+        					<span>自动登录</span>
+        				</div>        				
+        			</div>        			       		
+        		</form>
+        		<div class="reg">没有账户？<a href="/pages/register.html">立即注册</a></div>
+        	</div>
+        </div>
+    </section>
+    <!--引入尾部-->
+    <div id="footer"></div>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="js/jquery-1.11.0.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+    <!--导入布局js，共享header和footer-->
+    <script type="text/javascript" src="js/include.js"></script>
+    <script src="js/getParameter.js"></script>
+</body>
+</html>
+
+<script>
+	function showCheck(){
+		// 页面加载完需要发送一个异步请求，去后台查询cookie中是否有showCheck这个cookie,并且判断其值是否大于3
+		$.post("/user/showCheck.do",function (data){
+			if(data.flag){
+				// 需要显示验证码
+				$("#verify").show();
+			}else {
+				// 不需要显示图形验证码
+				$("#verify").hide();
+			}
+		});
+	}
+	// 入口函数
+	$(function (){
+		// 页面加载完就需要调用showCheck方法
+		showCheck();
+
+		// 需要对登陆的表单提交进行监听
+		$("#loginForm").submit(function (){
+			// 前端页面的数据校验待做 TODO
+			$.post("/user/login.do",$("#loginForm").serialize(),function (data){
+				// 在响应回来的时候需要刷新验证密码
+				changeCheckCode($("#img")[0]);
+				if(data.flag){
+					// 表示登陆成功，跳转到首页
+					//location.href="index.html";
+					var returnUrl=getParameter("returnUrl");
+
+					if(returnUrl!=null && returnUrl.length>0){
+						location.href=returnUrl;
+					}else {
+						location.href="index.html";
+					}
+
+				}else{
+					// 登陆失败,显示登陆失败的错误信息
+					$("#errorMsg").text(data.message);
+					showCheck();
+				}
+			});
+			// 不能够直接提交表单
+			return false;
+		})
+	})
+</script>
